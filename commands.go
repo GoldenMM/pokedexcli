@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/GoldenMM/pokedexcli/internal/pokeapi"
 )
 
 type Config struct {
@@ -63,7 +65,7 @@ func commandMap(config *Config) error {
 	}
 
 	// Get the map locations from the api wrapper
-	mapLocationRes, err := getMapLocations(config.next)
+	mapLocationRes, err := pokeapi.GetMapLocations(config.next)
 	if err != nil {
 		return fmt.Errorf("failed to get map locations: %v", err)
 	}
@@ -86,7 +88,7 @@ func commandMapb(config *Config) error {
 		return fmt.Errorf("no previous location-areas")
 	}
 	// Get the map locations from the api wrapper
-	mapLocationRes, err := getMapLocations(config.previous)
+	mapLocationRes, err := pokeapi.GetMapLocations(config.previous)
 	if err != nil {
 		return fmt.Errorf("failed to get map locations: %v", err)
 	}
