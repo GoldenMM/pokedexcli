@@ -17,6 +17,9 @@ func main() {
 	// Import the commands
 	commandMap := getCLICommands()
 
+	// Create the configuration
+	config := &Config{next: "https://pokeapi.co/api/v2/location-area/", previous: ""}
+
 	// Start the REPL and the control loop
 	for {
 		fmt.Print("pokedex>> ") // line message
@@ -34,6 +37,9 @@ func main() {
 			continue
 		}
 		// Execute the command
-		command.callback()
+		err := command.callback(config)
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+		}
 	}
 }
