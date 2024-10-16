@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoldenMM/pokedexcli/internal/pokeapi"
 	"github.com/GoldenMM/pokedexcli/internal/pokecache"
 )
 
@@ -22,10 +23,13 @@ func main() {
 	cache := pokecache.NewCache(5 * time.Second)
 
 	// Import the commands
-	commandMap := getCLICommands(cache)
+	commandMap := getCLICommands()
 
 	// Create the configuration
-	config := &Config{next: "https://pokeapi.co/api/v2/location-area/", previous: ""}
+	config := &Config{
+		next:     "https://pokeapi.co/api/v2/location-area/",
+		previous: "",
+		pokedex:  make(map[string]pokeapi.Pokemon)}
 
 	// Start the REPL and the control loop
 	for {
@@ -58,7 +62,7 @@ func main() {
 			continue
 		}
 		// Execute the command
-		err := command.callback(config, p)
+		err := command.callback(config, p, cache)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		}

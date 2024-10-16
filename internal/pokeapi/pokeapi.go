@@ -113,3 +113,27 @@ func GetPokemonInArea(area string) (PokemonInAreaResp, error) {
 
 	return pokemonArea, nil
 }
+
+func GetPokemon(pokemonString string) (Pokemon, error) {
+	url := "https://pokeapi.co/api/v2/pokemon/" + pokemonString
+
+	// Make the get request
+	res, err := http.Get(url)
+	if err != nil {
+		return Pokemon{}, fmt.Errorf("network error occured: %v", err)
+	}
+	// Check response status code
+	if res.StatusCode != http.StatusOK {
+		return Pokemon{}, fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
+	defer res.Body.Close()
+
+	// Decode the response
+	var pokemon Pokemon
+	decoder := json.NewDecoder(res.Body)
+	if err := decoder.Decode(&pokemon); err != nil {
+		return Pokemon{}, fmt.Errorf("failed to decode response: %v", err)
+	}
+
+	return pokemon, nil
+}
