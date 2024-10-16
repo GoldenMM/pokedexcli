@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"time"
 )
 
 func main() {
@@ -19,6 +20,8 @@ func main() {
 
 	// Create the configuration
 	config := &Config{next: "https://pokeapi.co/api/v2/location-area/", previous: ""}
+	// Initalize the cache
+	cache := NewCache(5 * time.Second)
 
 	// Start the REPL and the control loop
 	for {
