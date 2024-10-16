@@ -46,6 +46,13 @@ func getCLICommands(cache *pokecache.Cache) map[string]cliCommand {
 				return commandMapb(config, p, cache)
 			},
 		},
+		"explore": {
+			name:        "explore",
+			description: "Explore the map locations",
+			callback: func(config *Config, p string) error {
+				return commandExplore(config, p, cache)
+			},
+		},
 	}
 }
 
@@ -146,5 +153,42 @@ func commandMapb(config *Config, _ string, cache *pokecache.Cache) error {
 	config.next = mapLocationRes.Next
 	config.previous = mapLocationRes.Previous
 
+	return nil
+}
+
+func commandExplore(config *Config, p string, cache *pokecache.Cache) error {
+	// Check if the input is empty
+	if p == "" {
+		return fmt.Errorf("no location provided")
+	}
+
+	var pokemonInAreaResp pokeapi.PokemonInAreaResp
+
+	// Check if the cache has the data already
+	if val, ok := cache.Get(config.next); ok {
+		err := json.Unmarshal(val, &pokemonInAreaResp)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal cached data: %v", err)
+		}
+	} else {
+		// Get the map locations from the API wrapper
+		var err error
+		pokemonInAreaResp, err = pokeapi.GetPokemonInArea(p)
+		if err != nil {
+			return fmt.Errorf("failed to get map locations: %v", err)
+		}
+
+		// Cache the result
+		jsonData, err := json.Marshal(pokemonInAreaResp)
+		if err != nil {
+			return fmt.Errorf("failed to marshal data: %v", err)
+		}
+		cache.Add(config.next, jsonData)
+	}
+
+	// Print the pokemon in the area
+	for _, pokemon := range pokemonInAreaResp.PokemonEncounters {
+		fmt.Println(pokemon.Pokemon.Name)
+	}
 	return nil
 }
