@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/GoldenMM/pokedexcli/internal/pokeapi"
+	"github.com/GoldenMM/pokedexcli/internal/pokecache"
 )
 
 type Config struct {
@@ -18,7 +20,7 @@ type cliCommand struct {
 	callback    func(*Config) error
 }
 
-func getCLICommands() map[string]cliCommand {
+func getCLICommands(cache *pokecache.Cache) map[string]cliCommand {
 	return map[string]cliCommand{
 		"help": {
 			name:        "help",
@@ -33,12 +35,16 @@ func getCLICommands() map[string]cliCommand {
 		"map": {
 			name:        "map",
 			description: "Display next 20 map locations",
-			callback:    commandMap,
+			callback: func(config *Config) error {
+				return commandMap(config, cache)
+			},
 		},
 		"mapb": {
 			name:        "mapb",
 			description: "Display previous 20 map locations",
-			callback:    commandMapb,
+			callback: func(config *Config) error {
+				return commandMapb(config, cache)
+			},
 		},
 	}
 }
@@ -46,7 +52,7 @@ func getCLICommands() map[string]cliCommand {
 func commandHelp(config *Config) error {
 	fmt.Println("The following commands are available:")
 	// TODO: Sort the commands
-	for _, command := range getCLICommands() {
+	for _, command := range getCLICommands(&pokecache.Cache{}) {
 		fmt.Printf("%s: \t\t %s\n", command.name, command.description)
 	}
 	return nil
@@ -58,16 +64,34 @@ func commandExit(config *Config) error {
 	return nil
 }
 
-func commandMap(config *Config) error {
+func commandMap(config *Config, cache *pokecache.Cache) error {
 	// Check if the next location-areas exist
 	if config.next == "" {
 		return fmt.Errorf("no next location-areas")
 	}
 
-	// Get the map locations from the api wrapper
-	mapLocationRes, err := pokeapi.GetMapLocations(config.next)
-	if err != nil {
-		return fmt.Errorf("failed to get map locations: %v", err)
+	var mapLocationRes pokeapi.LocationAreaResp
+
+	// Check if the cache has the next location-areas
+	if val, ok := cache.Get(config.next); ok {
+		err := json.Unmarshal(val, &mapLocationRes)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal cached data: %v", err)
+		}
+	} else {
+		// Get the map locations from the API wrapper
+		var err error
+		mapLocationRes, err = pokeapi.GetMapLocations(config.next)
+		if err != nil {
+			return fmt.Errorf("failed to get map locations: %v", err)
+		}
+
+		// Cache the result
+		jsonData, err := json.Marshal(mapLocationRes)
+		if err != nil {
+			return fmt.Errorf("failed to marshal data: %v", err)
+		}
+		cache.Add(config.next, jsonData)
 	}
 
 	// Print the map locations
@@ -82,15 +106,34 @@ func commandMap(config *Config) error {
 	return nil
 }
 
-func commandMapb(config *Config) error {
+func commandMapb(config *Config, cache *pokecache.Cache) error {
 	// Check if the previous location-areas exist
 	if config.previous == "" {
 		return fmt.Errorf("no previous location-areas")
 	}
-	// Get the map locations from the api wrapper
-	mapLocationRes, err := pokeapi.GetMapLocations(config.previous)
-	if err != nil {
-		return fmt.Errorf("failed to get map locations: %v", err)
+
+	var mapLocationRes pokeapi.LocationAreaResp
+
+	// Check if the cache has the next location-areas
+	if val, ok := cache.Get(config.next); ok {
+		err := json.Unmarshal(val, &mapLocationRes)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal cached data: %v", err)
+		}
+	} else {
+		// Get the map locations from the API wrapper
+		var err error
+		mapLocationRes, err = pokeapi.GetMapLocations(config.next)
+		if err != nil {
+			return fmt.Errorf("failed to get map locations: %v", err)
+		}
+
+		// Cache the result
+		jsonData, err := json.Marshal(mapLocationRes)
+		if err != nil {
+			return fmt.Errorf("failed to marshal data: %v", err)
+		}
+		cache.Add(config.next, jsonData)
 	}
 
 	// Print the map locations

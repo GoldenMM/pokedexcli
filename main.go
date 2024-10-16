@@ -4,6 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"time"
+
+	"github.com/GoldenMM/pokedexcli/internal/pokecache"
 )
 
 func main() {
@@ -14,8 +17,11 @@ func main() {
 	fmt.Println("Go REPL")
 	fmt.Println("Type 'exit' to quit")
 
+	// Create the cache
+	cache := pokecache.NewCache(5 * time.Second)
+
 	// Import the commands
-	commandMap := getCLICommands()
+	commandMap := getCLICommands(cache)
 
 	// Create the configuration
 	config := &Config{next: "https://pokeapi.co/api/v2/location-area/", previous: ""}
