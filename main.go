@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/GoldenMM/pokedexcli/internal/pokecache"
@@ -34,16 +35,30 @@ func main() {
 		if !scanner.Scan() {
 			break
 		}
-		input := scanner.Text()
+		// Get the input and check if it had a command or not
+		input := strings.Fields(scanner.Text())
+		var commandString string
+		var p string
+		if len(input) == 1 {
+			commandString = input[0]
+		}
+		if len(input) == 2 {
+			commandString = input[0]
+			p = input[1]
+		}
+		if len(input) > 2 {
+			fmt.Println("Invalid input, too many arguments")
+			continue
+		}
 
 		// Check if the input is a command
-		command, ok := commandMap[input]
+		command, ok := commandMap[commandString]
 		if !ok {
 			fmt.Println("Command not found")
 			continue
 		}
 		// Execute the command
-		err := command.callback(config)
+		err := command.callback(config, p)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		}

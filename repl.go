@@ -17,7 +17,7 @@ type Config struct {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*Config) error
+	callback    func(*Config, string) error
 }
 
 func getCLICommands(cache *pokecache.Cache) map[string]cliCommand {
@@ -35,22 +35,23 @@ func getCLICommands(cache *pokecache.Cache) map[string]cliCommand {
 		"map": {
 			name:        "map",
 			description: "Display next 20 map locations",
-			callback: func(config *Config) error {
-				return commandMap(config, cache)
+			callback: func(config *Config, p string) error {
+				return commandMap(config, p, cache)
 			},
 		},
 		"mapb": {
 			name:        "mapb",
 			description: "Display previous 20 map locations",
-			callback: func(config *Config) error {
-				return commandMapb(config, cache)
+			callback: func(config *Config, p string) error {
+				return commandMapb(config, p, cache)
 			},
 		},
 	}
 }
 
-func commandHelp(config *Config) error {
+func commandHelp(config *Config, _ string) error {
 	fmt.Println("The following commands are available:")
+	fmt.Println("=====================================")
 	// TODO: Sort the commands
 	for _, command := range getCLICommands(&pokecache.Cache{}) {
 		fmt.Printf("%s: \t\t %s\n", command.name, command.description)
@@ -58,13 +59,13 @@ func commandHelp(config *Config) error {
 	return nil
 }
 
-func commandExit(config *Config) error {
+func commandExit(config *Config, _ string) error {
 	println("Exiting the Pokedex.")
 	os.Exit(0)
 	return nil
 }
 
-func commandMap(config *Config, cache *pokecache.Cache) error {
+func commandMap(config *Config, _ string, cache *pokecache.Cache) error {
 	// Check if the next location-areas exist
 	if config.next == "" {
 		return fmt.Errorf("no next location-areas")
@@ -106,7 +107,7 @@ func commandMap(config *Config, cache *pokecache.Cache) error {
 	return nil
 }
 
-func commandMapb(config *Config, cache *pokecache.Cache) error {
+func commandMapb(config *Config, _ string, cache *pokecache.Cache) error {
 	// Check if the previous location-areas exist
 	if config.previous == "" {
 		return fmt.Errorf("no previous location-areas")
